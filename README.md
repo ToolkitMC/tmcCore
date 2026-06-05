@@ -23,10 +23,8 @@ tmcCore includes many ready-to-use modules:
 - **Anti-Abuse System** — Automatic violation detection
 - **Ban / Mute / Kick Manager**
 - **Whitelist & Blacklist**
-- **File Manager** — Safe file operations
 - **Error Handler** — Centralized error management
 - **Scheduler** — Tick-based task scheduler (no Fabric API)
-- **Hash Util** — SHA-256 and MD5 utilities
 
 ### Utility Systems
 - **Permission API** — Simple permission levels
