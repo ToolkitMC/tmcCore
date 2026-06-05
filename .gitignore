@@ -1,0 +1,32 @@
+# gradle
+.gradle/
+build/
+out/
+classes/
+
+# eclipse
+.classpath
+.project
+.settings/
+
+# idea
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+.vscode/
+
+# macos
+.DS_Store
+
+# other
+run/
+logs/
+*.log
+fabric-server-launcher.properties
+*.jar
+
+# tmcCore specific
+config/tmcCore/
