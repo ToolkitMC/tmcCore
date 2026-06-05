@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "tmccore",
+  "version": "${version}",
+  "name": "tmcCore",
+  "description": "ToolkitMC Core Library - Full-featured client & server library with config, events, networking, scheduler and more",
+  "authors": ["ToolkitMC"],
+  "contact": {
+    "homepage": "https://github.com/ToolkitMC/tmcCore",
+    "sources": "https://github.com/ToolkitMC/tmcCore"
+  },
+  "license": "MIT",
+  "icon": "assets/tmccore/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.toolkitmc.tmccore.TmcCore"],
+    "client": ["com.toolkitmc.tmccore.TmcCoreClient"],
+    "server": ["com.toolkitmc.tmccore.TmcCoreServer"]
+  },
+  "mixins": ["tmccore.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  },
+  "custom": {
+    "tmcCore": {
+      "configPath": "tmcCore"
+    }
+  }
+}
