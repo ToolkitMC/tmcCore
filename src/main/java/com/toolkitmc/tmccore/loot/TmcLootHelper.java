@@ -4,6 +4,7 @@ import net.minecraft.loot.LootTable;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.util.Identifier;
 
 public class TmcLootHelper {

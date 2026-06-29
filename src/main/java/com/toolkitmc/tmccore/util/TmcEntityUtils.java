@@ -7,11 +7,11 @@ import net.minecraft.util.math.BlockPos;
 public class TmcEntityUtils {
     public static void teleport(Entity entity, BlockPos pos) {
         if (entity.getWorld() instanceof ServerWorld world) {
-            entity.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, java.util.Set.of(), 0, 0);
+            entity.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, java.util.Set.of(), 0.0F, 0.0F, false);
         }
     }
 
     public static void killEntity(Entity entity) {
-        entity.kill();
+        entity.discard();
     }
 }
