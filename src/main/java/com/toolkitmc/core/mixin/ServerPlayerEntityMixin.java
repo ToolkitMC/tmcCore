@@ -2,57 +2,57 @@ package com.toolkitmc.core.mixin;
 
 import com.toolkitmc.core.impl.data.DataHolder;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Injects tmCore data storage into all entities.
- * Data is persisted via writeNbt/readNbt hooks.
+ * Injects tmCore data storage into all entities via the 1.21.8+ WriteView/ReadView API.
  *
- * Method descriptors are explicit to avoid Mixin descriptor resolution warnings.
- * writeNbt: (Lnet/minecraft/nbt/NbtCompound;)Lnet/minecraft/nbt/NbtCompound;
- * readNbt:  (Lnet/minecraft/nbt/NbtCompound;)V
+ * <p>writeNbt/readNbt were removed in 1.21.8. Entity custom data is now persisted via
+ * {@code writeCustomData(WriteView)} and {@code readCustomData(ReadView)}.
+ *
+ * <p>All tmCore data is serialized as a single JSON string stored under "tmcore_data".
  */
 @Mixin(Entity.class)
 public abstract class ServerPlayerEntityMixin implements DataHolder {
 
+    private static final String TMCORE_KEY = "tmcore_data";
+
     @Unique
-    private @Nullable NbtCompound tmcore$data = null;
+    private @Nullable String tmcore$json = null;
 
     @Override
-    public @Nullable NbtCompound tmcore_getData() {
-        return tmcore$data;
+    public @Nullable String tmcore_getJson() {
+        return tmcore$json;
     }
 
     @Override
-    public void tmcore_setData(NbtCompound data) {
-        this.tmcore$data = data;
+    public void tmcore_setJson(@Nullable String json) {
+        this.tmcore$json = json;
     }
 
     @Inject(
-        method = "writeNbt(Lnet/minecraft/nbt/NbtCompound;)Lnet/minecraft/nbt/NbtCompound;",
+        method = "writeCustomData(Lnet/minecraft/storage/WriteView;)V",
         at = @At("RETURN")
     )
-    private void tmcore$writeNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
-        if (tmcore$data != null && !tmcore$data.isEmpty()) {
-            nbt.put("tmcore_data", tmcore$data);
+    private void tmcore$writeCustomData(WriteView view, CallbackInfo ci) {
+        if (tmcore$json != null && !tmcore$json.isEmpty()) {
+            view.putString(TMCORE_KEY, tmcore$json);
         }
     }
 
     @Inject(
-        method = "readNbt(Lnet/minecraft/nbt/NbtCompound;)V",
+        method = "readCustomData(Lnet/minecraft/storage/ReadView;)V",
         at = @At("RETURN")
     )
-    private void tmcore$readNbt(NbtCompound nbt, CallbackInfo ci) {
-        if (nbt.contains("tmcore_data")) {
-            // 1.21.8+: getCompound returns Optional<NbtCompound>
-            nbt.getCompound("tmcore_data").ifPresent(c -> tmcore$data = c);
-        }
+    private void tmcore$readCustomData(ReadView view, CallbackInfo ci) {
+        // getOptionalString returns Optional<String> — only present if key exists
+        view.getOptionalString(TMCORE_KEY).ifPresent(json -> tmcore$json = json);
     }
 }

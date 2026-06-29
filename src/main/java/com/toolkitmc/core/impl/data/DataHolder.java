@@ -1,13 +1,15 @@
 package com.toolkitmc.core.impl.data;
 
-import net.minecraft.nbt.NbtCompound;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Interface injected onto {@link net.minecraft.entity.Entity} via mixin.
- * Provides access to tmCore's persistent data NBT compound.
+ *
+ * <p>In 1.21.8+, entity serialization moved from NbtCompound to WriteView/ReadView.
+ * All tmCore data is stored as a single JSON string under the "tmcore_data" key.
  */
 public interface DataHolder {
-    @Nullable NbtCompound tmcore_getData();
-    void tmcore_setData(NbtCompound data);
+    /** Returns the raw JSON payload for this entity, or {@code null} if never written. */
+    @Nullable String tmcore_getJson();
+    void tmcore_setJson(@Nullable String json);
 }
