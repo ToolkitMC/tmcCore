@@ -1,29 +1,49 @@
 {
   "schemaVersion": 1,
-  "id": "tmcore",
+  "id": "tmccore",
   "version": "${version}",
-  "name": "tmCore",
-  "description": "Core API library for ToolkitMC Fabric mods. Provides registry, event bus, config, networking, commands, and data attachment systems.",
-  "authors": ["ToolkitMC"],
+  "name": "tmcCore",
+  "description": "ToolkitMC Core Library - Full-featured client & server library with config, events, networking, scheduler and more",
+  "authors": [
+    "ToolkitMC"
+  ],
   "contact": {
-    "homepage": "https://github.com/ToolkitMC/tmCore",
-    "sources": "https://github.com/ToolkitMC/tmCore",
-    "issues": "https://github.com/ToolkitMC/tmCore/issues"
+    "homepage": "https://github.com/ToolkitMC/tmcCore",
+    "sources": "https://github.com/ToolkitMC/tmcCore"
   },
   "license": "MIT",
-  "icon": "assets/tmcore/icon.png",
+  "icon": "assets/tmccore/icon.png",
+  "provides": [
+    "tmc-core"
+  ],
   "environment": "*",
   "entrypoints": {
-    "main": ["com.toolkitmc.core.TmCore"],
-    "client": ["com.toolkitmc.core.client.TmCoreClient"]
+    "main": [
+      "com.toolkitmc.tmccore.TmcCore"
+    ],
+    "client": [
+      "com.toolkitmc.tmccore.TmcCoreClient"
+    ],
+    "server": [
+      "com.toolkitmc.tmccore.TmcCoreServer"
+    ]
   },
-  "mixins": ["tmcore.mixins.json"],
+  "mixins": [
+    "tmccore.mixins.json"
+  ],
   "depends": {
-    "fabricloader": ">=${loader_version}",
-    "fabric-api": "*",
-    "minecraft": "~${minecraft_version}"
+    "minecraft": "~1.21.1",
+    "java": ">=21"
   },
   "custom": {
-    "tmcore:api_version": "1"
+    "tmcCore": {
+      "configPath": "tmcCore"
+    },
+    "modmenu": {
+      "update_checker": false,
+      "badges": [
+        "library"
+      ]
+    }
   }
 }
