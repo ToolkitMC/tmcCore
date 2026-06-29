@@ -55,16 +55,18 @@ public final class TmConfigManagerImpl implements TmConfigManager {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void reload(String namespace) {
         ConfigEntry<?> entry = requireEntry(namespace);
         Path path = getConfigPath(namespace);
-
-        Object reloaded = loadOrDefault(path, entry.configClass(), entry.defaults());
-        entries.put(namespace, new ConfigEntry<>(entry.configClass(), reloaded, entry.defaults()));
-
+        reloadEntry(namespace, path, entry);
         TmCore.events().fire(new ConfigReloadEvent(namespace, entry.configClass()));
         TmCore.LOGGER.info("Config reloaded: {}", namespace);
+    }
+
+    /** Generic helper so the compiler can bind T across loadOrDefault and ConfigEntry<T>. */
+    private <T> void reloadEntry(String namespace, Path path, ConfigEntry<T> entry) {
+        T reloaded = loadOrDefault(path, entry.configClass(), entry.defaults());
+        entries.put(namespace, new ConfigEntry<>(entry.configClass(), reloaded, entry.defaults()));
     }
 
     @Override
@@ -79,12 +81,16 @@ public final class TmConfigManagerImpl implements TmConfigManager {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void reset(String namespace) {
         ConfigEntry<?> entry = requireEntry(namespace);
+        resetEntry(namespace, entry);
+        TmCore.LOGGER.info("Config reset to defaults: {}", namespace);
+    }
+
+    /** Generic helper to bind T for reset. */
+    private <T> void resetEntry(String namespace, ConfigEntry<T> entry) {
         entries.put(namespace, new ConfigEntry<>(entry.configClass(), entry.defaults(), entry.defaults()));
         writeToFile(getConfigPath(namespace), entry.defaults());
-        TmCore.LOGGER.info("Config reset to defaults: {}", namespace);
     }
 
     @Override

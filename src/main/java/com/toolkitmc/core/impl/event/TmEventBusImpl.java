@@ -25,8 +25,10 @@ public final class TmEventBusImpl implements TmEventBus {
 
         Subscription<T> sub = new Subscription<>(listener, priority);
         list.add(sub);
-        // Sort descending by priority after each insertion
-        list.sort(Comparator.comparingInt(Subscription::priority).reversed());
+        // Sort descending by priority after each insertion.
+        // Explicit Comparator<Subscription<?>> cast avoids wildcard capture issue
+        // with method reference Subscription::priority in Java generics.
+        list.sort(Comparator.<Subscription<?>, Integer>comparing(s -> s.priority()).reversed());
 
         return () -> list.remove(sub);
     }

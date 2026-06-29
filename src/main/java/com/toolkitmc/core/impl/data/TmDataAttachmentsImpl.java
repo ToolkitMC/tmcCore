@@ -11,6 +11,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.PersistentState;
+import net.minecraft.world.PersistentStateType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -168,7 +169,10 @@ public final class TmDataAttachmentsImpl implements TmDataAttachments {
         String nbtKey = nbtKeyFor(key.getId());
         if (!nbt.contains(nbtKey)) return Optional.empty();
         try {
-            T value = GSON.fromJson(nbt.getString(nbtKey), key.getType());
+            // 1.21.8+: getString returns Optional<String>
+            Optional<String> raw = nbt.getString(nbtKey);
+            if (raw.isEmpty()) return Optional.empty();
+            T value = GSON.fromJson(raw.get(), key.getType());
             return Optional.ofNullable(value);
         } catch (Exception e) {
             TmCore.LOGGER.warn("Failed to read data key {}: {}", key.getId(), e.getMessage());
@@ -185,7 +189,6 @@ public final class TmDataAttachmentsImpl implements TmDataAttachments {
     }
 
     private NbtCompound getOrCreateEntityNbt(Entity entity) {
-        // Access through our mixin-injected interface
         if (entity instanceof DataHolder holder) {
             NbtCompound root = holder.tmcore_getData();
             if (root == null) {
@@ -194,17 +197,13 @@ public final class TmDataAttachmentsImpl implements TmDataAttachments {
             }
             return root;
         }
-        // Fallback: use custom data NbtCompound (shouldn't happen with mixin applied)
         TmCore.LOGGER.warn("Entity {} does not implement DataHolder — data will not persist.", entity.getClass().getSimpleName());
         return new NbtCompound();
     }
 
     private TmWorldData getWorldState(ServerWorld world) {
-        return world.getPersistentStateManager().getOrCreate(
-            TmWorldData::readNbt,
-            TmWorldData::new,
-            "tmcore_world_data"
-        );
+        // 1.21.8+: PersistentStateManager.getOrCreate() takes PersistentStateType<T>
+        return world.getPersistentStateManager().getOrCreate(TmWorldData.TYPE);
     }
 
     // -------------------------------------------------------------------------
@@ -214,11 +213,20 @@ public final class TmDataAttachmentsImpl implements TmDataAttachments {
     public static final class TmWorldData extends PersistentState {
         private NbtCompound data = new NbtCompound();
 
+        /** PersistentStateType — required by 1.21.8+ API */
+        public static final PersistentStateType<TmWorldData> TYPE = new PersistentStateType<>(
+            "tmcore_world_data",
+            TmWorldData::new,
+            TmWorldData::readNbt,
+            null  // codec — optional, null is fine
+        );
+
         public TmWorldData() {}
 
         public static TmWorldData readNbt(NbtCompound nbt) {
             TmWorldData state = new TmWorldData();
-            state.data = nbt.getCompound("data");
+            // 1.21.8+: getCompound returns Optional<NbtCompound>
+            nbt.getCompound("data").ifPresent(c -> state.data = c);
             return state;
         }
 

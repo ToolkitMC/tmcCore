@@ -32,37 +32,41 @@ public final class TmNbt {
     private TmNbt() {}
 
     // -------------------------------------------------------------------------
-    // Safe getters
+    // Safe getters — 1.21.8+: NbtCompound.get*() returns Optional<T>
     // -------------------------------------------------------------------------
 
     public static int getInt(NbtCompound nbt, String key, int defaultValue) {
-        return nbt.contains(key, NbtElement.INT_TYPE) ? nbt.getInt(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getInt(key).orElse(defaultValue);
     }
 
     public static long getLong(NbtCompound nbt, String key, long defaultValue) {
-        return nbt.contains(key, NbtElement.LONG_TYPE) ? nbt.getLong(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getLong(key).orElse(defaultValue);
     }
 
     public static float getFloat(NbtCompound nbt, String key, float defaultValue) {
-        return nbt.contains(key, NbtElement.FLOAT_TYPE) ? nbt.getFloat(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getFloat(key).orElse(defaultValue);
     }
 
     public static double getDouble(NbtCompound nbt, String key, double defaultValue) {
-        return nbt.contains(key, NbtElement.DOUBLE_TYPE) ? nbt.getDouble(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getDouble(key).orElse(defaultValue);
     }
 
     public static boolean getBoolean(NbtCompound nbt, String key, boolean defaultValue) {
-        return nbt.contains(key, NbtElement.BYTE_TYPE) ? nbt.getBoolean(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getBoolean(key).orElse(defaultValue);
     }
 
     public static String getString(NbtCompound nbt, String key, String defaultValue) {
-        return nbt.contains(key, NbtElement.STRING_TYPE) ? nbt.getString(key) : defaultValue;
+        if (!nbt.contains(key)) return defaultValue;
+        return nbt.getString(key).orElse(defaultValue);
     }
 
     public static Optional<NbtCompound> getCompound(NbtCompound nbt, String key) {
-        return nbt.contains(key, NbtElement.COMPOUND_TYPE)
-            ? Optional.of(nbt.getCompound(key))
-            : Optional.empty();
+        return nbt.getCompound(key);
     }
 
     // -------------------------------------------------------------------------
@@ -74,9 +78,10 @@ public final class TmNbt {
     }
 
     public static Optional<Identifier> getIdentifier(NbtCompound nbt, String key) {
-        if (!nbt.contains(key, NbtElement.STRING_TYPE)) return Optional.empty();
+        Optional<String> raw = nbt.getString(key);
+        if (raw.isEmpty()) return Optional.empty();
         try {
-            return Optional.of(Identifier.of(nbt.getString(key)));
+            return Optional.of(Identifier.of(raw.get()));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -93,10 +98,12 @@ public final class TmNbt {
     }
 
     public static List<String> getStringList(NbtCompound nbt, String key) {
-        if (!nbt.contains(key, NbtElement.LIST_TYPE)) return Collections.emptyList();
-        NbtList list = nbt.getList(key, NbtElement.STRING_TYPE);
+        // getList() now returns Optional<NbtList>
+        Optional<NbtList> listOpt = nbt.getList(key);
+        if (listOpt.isEmpty()) return Collections.emptyList();
+        NbtList list = listOpt.get();
         List<String> result = new ArrayList<>(list.size());
-        for (NbtElement el : list) result.add(el.asString());
+        for (NbtElement el : list) result.add(el.asString().orElse(""));
         return Collections.unmodifiableList(result);
     }
 
@@ -111,13 +118,12 @@ public final class TmNbt {
     }
 
     public static Map<String, String> getStringMap(NbtCompound nbt, String key) {
-        if (!nbt.contains(key, NbtElement.COMPOUND_TYPE)) return Collections.emptyMap();
-        NbtCompound compound = nbt.getCompound(key);
+        Optional<NbtCompound> compoundOpt = nbt.getCompound(key);
+        if (compoundOpt.isEmpty()) return Collections.emptyMap();
+        NbtCompound compound = compoundOpt.get();
         Map<String, String> result = new LinkedHashMap<>();
         for (String k : compound.getKeys()) {
-            if (compound.contains(k, NbtElement.STRING_TYPE)) {
-                result.put(k, compound.getString(k));
-            }
+            compound.getString(k).ifPresent(v -> result.put(k, v));
         }
         return Collections.unmodifiableMap(result);
     }
