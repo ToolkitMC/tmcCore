@@ -1,9 +1,9 @@
 plugins {
-    id 'fabric-loom' version '1.10-SNAPSHOT'
+    id 'fabric-loom' version '1.10.4'
     id 'maven-publish'
 }
 
-version = project.mod_version
+version = "${project.mod_version}+mc${project.minecraft_version}"
 group = project.maven_group
 
 base {
@@ -11,7 +11,8 @@ base {
 }
 
 repositories {
-    maven { url "https://maven.fabricmc.net/" }
+    mavenCentral()
+    maven { url = "https://maven.fabricmc.net/" }
 }
 
 dependencies {
@@ -19,55 +20,32 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-}
 
-loom {
-    runs {
-        gameTest {
-            client()
-        }
-    }
-}
-
-sourceSets {
-    test {
-        java {
-            srcDir("src/test/java")
-        }
-        resources {
-            srcDir("src/test/resources")
-        }
-    }
-}
-
-tasks.register("runProductionClientGameTest", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
-    jvmArgs.add("-Dfabric.client.gametest")
+    // GSON for config serialization (bundled with Minecraft, no need to include)
+    compileOnly 'com.google.code.gson:gson:2.10.1'
 }
 
 processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", project.minecraft_version
     inputs.property "loader_version", project.loader_version
-    filteringCharset "UTF-8"
+    inputs.property "fabric_version", project.fabric_version
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-                "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+        expand(
+            "version": project.version,
+            "minecraft_version": project.minecraft_version,
+            "loader_version": project.loader_version,
+            "fabric_version": project.fabric_version
+        )
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-    options.release = 21
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
     withSourcesJar()
+    withJavadocJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -79,9 +57,34 @@ jar {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            groupId = project.maven_group
+            artifactId = project.archives_base_name
+            version = project.version
+
             from components.java
+
+            pom {
+                name = "tmCore"
+                description = "Core API library for ToolkitMC Fabric mods"
+                url = "https://github.com/ToolkitMC/tmCore"
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://opensource.org/licenses/MIT"
+                    }
+                }
+            }
         }
     }
+
     repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ToolkitMC/tmCore")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user")
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")
+            }
+        }
     }
 }
